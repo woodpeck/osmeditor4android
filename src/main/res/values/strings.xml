@@ -430,10 +430,11 @@
     <string name="location_current_text_parameterized">Current location: %1$s</string>
     <string name="location_text_metadata_location">\nLat %1$4g, Lon %2$4g\n%3$s %4$s ago</string>
     <string name="location_text_metadata_accuracy">Accuracy %1$2.0f meter,</string>
-    <string name="location_map_text">From map (coming soon)</string>
     <string name="location_coordinates_text">From coordinates:</string>
     <string name="location_lat_label">Lat:</string>
     <string name="location_lon_label">Lon:</string>
+    <string name="location_olc_text">From Open Location Code:</string>
+    <string name="location_olc_label">OLC:</string>
     <string name="location_search_label">Search:</string>
     <string name="location_load_button">Load</string>
     <string name="location_load_dismiss">Go to map</string>

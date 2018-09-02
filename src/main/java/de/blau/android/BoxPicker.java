@@ -33,6 +33,9 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
+import com.google.openlocationcode.OpenLocationCode;
+import com.google.openlocationcode.OpenLocationCode.CodeArea;
+
 import de.blau.android.dialogs.ErrorAlert;
 import de.blau.android.exception.OsmException;
 import de.blau.android.geocode.Search;
@@ -110,6 +113,7 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
     Button   loadMapButton;
     EditText latEdit;
     EditText lonEdit;
+    EditText olcEdit;
 
     public static void startForResult(@NonNull Activity activity, int titleResId, int requestCode) {
         Log.d(DEBUG_TAG, "startForResult");
@@ -146,6 +150,7 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
         Button dontLoadMapButton = ((Button) findViewById(R.id.location_button_no_location));
         latEdit = (EditText) findViewById(R.id.location_lat_edit);
         lonEdit = (EditText) findViewById(R.id.location_lon_edit);
+        olcEdit = (EditText) findViewById(R.id.location_olc_edit);
         EditText searchEdit = (EditText) findViewById(R.id.location_search_edit);
         SeekBar seeker = (SeekBar) findViewById(R.id.location_radius_seeker);
 
@@ -154,7 +159,7 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
         // register listeners
         seeker.setOnSeekBarChangeListener(createSeekBarListener());
         radioGroup.setOnCheckedChangeListener(createRadioGroupListener(loadMapButton, latEdit, lonEdit));
-        OnClickListener onClickListener = createButtonListener(radioGroup, latEdit, lonEdit);
+        OnClickListener onClickListener = createButtonListener(radioGroup);
         loadMapButton.setOnClickListener(onClickListener);
         dontLoadMapButton.setOnClickListener(onClickListener);
 
@@ -286,10 +291,12 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
             @Override
             public void onCheckedChanged(final RadioGroup group, final int checkedId) {
                 LinearLayout coordinateView = (LinearLayout) findViewById(R.id.location_coordinates_layout);
+                LinearLayout olcView = (LinearLayout) findViewById(R.id.location_olc_layout);
                 loadMapButton.setEnabled(true);
                 // dontLoadMapButton.setEnabled(true);
                 if (checkedId == R.id.location_coordinates) {
                     coordinateView.setVisibility(View.VISIBLE);
+                    olcView.setVisibility(View.GONE);
                     // don't overwrite existing values...
                     if (latEdit.getText().length() == 0 && lonEdit.getText().length() == 0) {
                         if (currentLocation != null) {
@@ -300,8 +307,12 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
                             lonEdit.setText(Double.toString(lastLocation.getLongitude()));
                         }
                     }
+                } else if (checkedId == R.id.location_olc) {
+                    coordinateView.setVisibility(View.GONE);
+                    olcView.setVisibility(View.VISIBLE);
                 } else {
                     coordinateView.setVisibility(View.GONE);
+                    olcView.setVisibility(View.GONE);
                 }
             }
         };
@@ -341,17 +352,13 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
      * Reads the manual coordinate EditTexts and registers the button listeners.
      * 
      * @param radioGroup
-     * @param latEdit Manual Latitude EditText.
-     * @param lonEdit Manual Longitude EditText.
      * @return the OnClickListener
      */
-    private OnClickListener createButtonListener(final RadioGroup radioGroup, final EditText latEdit, final EditText lonEdit) {
+    private OnClickListener createButtonListener(final RadioGroup radioGroup) {
         return new OnClickListener() {
             @Override
             public void onClick(final View view) {
-                String lat = latEdit.getText().toString();
-                String lon = lonEdit.getText().toString();
-                performClick(view.getId(), radioGroup.getCheckedRadioButtonId(), lat, lon);
+                performClick(view.getId(), radioGroup.getCheckedRadioButtonId());
             }
         };
     }
@@ -366,7 +373,7 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
      * @param lat latitude from the EditText.
      * @param lon longitude from the EditText.
      */
-    private void performClick(final int buttonId, final int checkedRadioButtonId, final String lat, final String lon) {
+    private void performClick(final int buttonId, final int checkedRadioButtonId) {
         BoundingBox box = null;
         int resultState = (buttonId == R.id.location_button_current) ? RESULT_OK : RESULT_CANCELED;
         // return bbox even if cancelled
@@ -381,7 +388,13 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
             box = createBoxForLastLocation();
             break;
         case R.id.location_coordinates:
+            String lat = latEdit.getText().toString();
+            String lon = lonEdit.getText().toString();
             box = createBoxForManualLocation(lat, lon);
+            break;
+        case R.id.location_olc:
+            String code = olcEdit.getText().toString();
+            box = createBoxForOlc(code);
             break;
         }
 
@@ -440,6 +453,17 @@ public class BoxPicker extends BugFixedAppCompatActivity implements LocationList
             float userLon = Float.parseFloat(lon);
             box = GeoMath.createBoundingBoxForCoordinates(userLat, userLon, currentRadius, true);
         } catch (NumberFormatException | OsmException e) {
+            ErrorAlert.showDialog(this, ErrorCodes.NAN);
+        }
+        return box;
+    }
+
+    private BoundingBox createBoxForOlc(final String code) {
+        BoundingBox box = null;
+        try {
+            CodeArea area = OpenLocationCode.decode(code);
+            box = new BoundingBox(area.getWestLongitude(), area.getSouthLatitude(), area.getEastLongitude(), area.getNorthLatitude());
+        } catch (IllegalArgumentException e) {
             ErrorAlert.showDialog(this, ErrorCodes.NAN);
         }
         return box;
