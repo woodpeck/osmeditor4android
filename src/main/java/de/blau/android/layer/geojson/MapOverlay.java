@@ -204,7 +204,7 @@ public class MapOverlay extends StyleableLayer implements Serializable, ExtentIn
          * Serialize this object
          * 
          * @param out ObjectOutputStream to write to
-         * @throws IOException if writing failes
+         * @throws IOException if writing fails
          */
         private void writeObject(java.io.ObjectOutputStream out) throws IOException {
             out.writeUTF(feature.toJson());
@@ -215,7 +215,7 @@ public class MapOverlay extends StyleableLayer implements Serializable, ExtentIn
          * Recreate the object for serialized state
          * 
          * @param in ObjectInputStream to write from
-         * @throws IOException if reading failes
+         * @throws IOException if reading fails
          * @throws ClassNotFoundException the target Class isn't defined
          */
         private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
