@@ -19,10 +19,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.ViewStub;
+import android.widget.LinearLayout;
 import de.blau.android.Map;
 import de.blau.android.PostAsyncActionHandler;
 import de.blau.android.R;
 import de.blau.android.contract.MimeTypes;
+import de.blau.android.dialogs.PhotoViewerFragment;
 import de.blau.android.layer.ClickableInterface;
 import de.blau.android.layer.DisableInterface;
 import de.blau.android.layer.MapViewLayer;
@@ -264,19 +270,26 @@ public class MapOverlay extends MapViewLayer implements DisableInterface, Clicka
         Context context = map.getContext();
         Resources resources = context.getResources();
         try {
-            Intent myIntent = new Intent(Intent.ACTION_VIEW);
-            int flags = Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                flags = flags | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT;
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                flags = flags | Intent.FLAG_ACTIVITY_CLEAR_TASK;
-            }
-            myIntent.setFlags(flags);
+            // Intent myIntent = new Intent(Intent.ACTION_VIEW);
+            // int flags = Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            // flags = flags | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT;
+            // } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // flags = flags | Intent.FLAG_ACTIVITY_CLEAR_TASK;
+            // }
+            // myIntent.setFlags(flags);
             Uri photoUri = photo.getRefUri(context);
             if (photoUri != null) {
-                // black magic only works this way
-                myIntent.setDataAndType(photoUri, MimeTypes.JPEG);
-                context.startActivity(myIntent);
+                // // black magic only works this way
+                // myIntent.setDataAndType(photoUri, MimeTypes.JPEG);
+                // context.startActivity(myIntent);
+                ArrayList<String> uris = new ArrayList<>();
+                uris.add(photoUri.toString());
+                // PhotoViewer.showDialog(activity, uris, 0);
+//                LinearLayout v = activity.findViewById(R.id.fragment_stub);
+//                v.removeAllViews();
+                activity.getSupportFragmentManager().beginTransaction().replace(R.id.fragment_stub, PhotoViewerFragment.newInstance(uris, 0), PhotoViewerFragment.TAG).commit();
+
                 selected = photo;
                 invalidate();
             } else {
@@ -309,7 +322,7 @@ public class MapOverlay extends MapViewLayer implements DisableInterface, Clicka
     public void deselectObjects() {
         selected = null;
     }
-    
+
     @Override
     public void setSelected(Photo o) {
         selected = o;
